@@ -1,0 +1,101 @@
+const request = superagent;
+
+class App extends React.Component {
+  constructor(props) {
+    super(props);
+    this.handleClick = this.handleClick.bind(this);
+    this.state = {
+      isAllTime: false,
+      topThirty: [],
+      topAllTime: []
+    }
+  }
+  
+  handleClick() {
+    this.setState((prevState) => {
+			return {
+				isAllTime: !prevState.isAllTime
+			};
+		});
+  }
+  
+  componentWillMount() {
+    request
+      .get('https://fcctop100.herokuapp.com/api/fccusers/top/recent')
+      .end((err, res) => {
+        this.setState({topThirty: res.body});
+    });
+    
+    request
+      .get('https://fcctop100.herokuapp.com/api/fccusers/top/alltime')
+      .end((err, res) => {
+        this.setState({topAllTime: res.body});
+    });
+  }
+  
+  componentDidUpdate(prevProps, prevState) {
+    console.log(prevState);
+  }
+  
+  render() {
+    return (
+      <div id="container">
+        <Header />
+        <Button onClick={this.handleClick} isAllTime={this.state.isAllTime}/>
+        <Leaderboard isAllTime={this.state.isAllTime} topThirty={this.state.topThirty} topAllTime={this.state.topAllTime} />
+      </div>
+    );
+  }
+}
+
+const Header = (props) => {
+  return (
+    <div id="header">
+      <img src="https://avatars0.githubusercontent.com/u/9892522?s=400&v=4" />
+      <h1>freeCodeCamp</h1>
+    </div>
+  );
+};
+
+const Button = (props) => {
+  return <button id="btn" onClick={props.onClick}>{!props.isAllTime ? "Sort by all time" : "Sort by top 30 campers"}</button>
+};
+
+class Leaderboard extends React.Component {
+    render() {
+    let campersTopThirty = this.props.topThirty.map((camper, i) => {
+      return (
+        <tr>
+          <td>{i + 1 + "."}</td>
+          <td><img src={camper.img} />{camper.username}</td>
+          <td>{camper.recent}</td>
+          <td>{camper.alltime}</td>
+        </tr>
+      );                                 
+    });
+    let campersTopAllTime = this.props.topAllTime.map((camper, i) => {
+      return (
+        <tr>
+          <td>{i + 1 + "."}</td>
+          <td><img src={camper.img} />{camper.username}</td>
+          <td>{camper.recent}</td>
+          <td>{camper.alltime}</td>
+        </tr>
+      );                                 
+    });
+    
+    return (
+      <table id="table">
+        <tr>
+          <th>#</th>
+          <th>Camper Name</th>
+          <th>Points in past 30 days</th>
+          <th>All time points</th>
+        </tr>
+        {!this.props.isAllTime ? campersTopThirty : campersTopAllTime}
+      </table>
+    );
+  }
+}
+
+ReactDOM.render(<App />, document.getElementById("app"));
